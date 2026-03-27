@@ -1,23 +1,10 @@
-from fastapi import Depends, FastAPI
+from fastapi import FastAPI
 
 from .api.routes import datasets, health, lightcurve, skymap, spectrum, theta2
-from .core.config import Settings, get_settings
+from .core.config import get_settings
 from .core.logging import configure_logging
-from .domain.data_loader import DataLoader
-from .domain.dataset_registry import DatasetRegistry
 
 app = FastAPI(title="TelescopeWebApp API", version="0.1.0")
-
-
-def get_registry(settings: Settings = Depends(get_settings)) -> DatasetRegistry:
-    return DatasetRegistry(settings.datasets_file)
-
-
-def get_data_loader(
-    settings: Settings = Depends(get_settings),
-    registry: DatasetRegistry = Depends(get_registry),
-) -> DataLoader:
-    return DataLoader(data_root=settings.data_dir, registry=registry)
 
 
 @app.on_event("startup")

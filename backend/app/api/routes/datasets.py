@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException
 
+from ...dependencies import get_data_loader, get_registry
 from ...domain.data_loader import DataLoader
 from ...domain.dataset_registry import DatasetRegistry
 from ...domain.schemas import DatasetInfo, ObservationInfo
-from ...main import get_data_loader, get_registry
 
 router = APIRouter(prefix="/datasets", tags=["datasets"])
 
