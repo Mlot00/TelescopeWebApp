@@ -1,0 +1,7 @@
+datasets:
+  - id: crab_sample
+    title: Crab sample DL3
+    instrument: LST-1
+    source: Crab Nebula
+    datastore_path: sample/crab_dl3
+    dl3_index_required: true

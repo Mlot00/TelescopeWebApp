@@ -1,0 +1,1 @@
+"""Sky map analysis package."""
