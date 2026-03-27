@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 
 @dataclass
@@ -10,11 +10,14 @@ class ProvenanceRecord:
     created_at: str
 
 
-
-def build_provenance(dataset_id: str, analysis_kind: str, git_sha: str = "unknown") -> ProvenanceRecord:
+def build_provenance(
+    dataset_id: str,
+    analysis_kind: str,
+    git_sha: str = "unknown",
+) -> ProvenanceRecord:
     return ProvenanceRecord(
         dataset_id=dataset_id,
         analysis_kind=analysis_kind,
         git_sha=git_sha,
-        created_at=datetime.now(timezone.utc).isoformat(),
+        created_at=datetime.now(UTC).isoformat(),
     )
