@@ -32,3 +32,11 @@ select = ["E", "F", "I", "UP"]
 
 [tool.pytest.ini_options]
 pythonpath = ["backend", "."]
+
+
+[tool.setuptools]
+include-package-data = false
+
+[tool.setuptools.packages.find]
+include = ["backend*", "analysis_core*"]
+exclude = ["tests*", "frontend*", "data*", "docker*"]
