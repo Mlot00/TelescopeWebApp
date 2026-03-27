@@ -1,0 +1,5 @@
+# Replace GitHub handles with real usernames
+/backend/ @team-backend
+/frontend/ @team-frontend
+/analysis_core/ @team-analysis
+/.github/workflows/ @team-devops

@@ -1,0 +1,1 @@
+"""Light curve analysis package."""
