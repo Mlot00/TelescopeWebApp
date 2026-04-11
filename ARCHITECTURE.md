@@ -2,7 +2,7 @@
 
 ## High-level
 Monorepo z trzema warstwami:
-1. `backend/` – FastAPI, kontrakty API, walidacja datasetów
+1. `backend/` – Django, kontrakty API, walidacja datasetów
 2. `frontend/` – Streamlit UI dla modułów analizy
 3. `analysis_core/` – wspólna logika analityczna (modułowa, bez kodu UI)
 

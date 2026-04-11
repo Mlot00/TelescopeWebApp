@@ -3,17 +3,14 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
-def test_datasets_route_does_not_import_main_dependency_providers() -> None:
-    datasets_route = REPO_ROOT / "backend/app/api/routes/datasets.py"
-    content = datasets_route.read_text(encoding="utf-8")
+def test_backend_views_are_django_based() -> None:
+    views_file = REPO_ROOT / "backend/app/views.py"
+    content = views_file.read_text(encoding="utf-8")
 
-    assert "from ...main import get_data_loader, get_registry" not in content
-    assert "from ...dependencies import get_data_loader, get_registry" in content
+    assert "from django.http" in content
+    assert "from fastapi" not in content
 
 
-def test_dependency_providers_live_in_dependencies_module() -> None:
-    dependencies_module = REPO_ROOT / "backend/app/dependencies.py"
-    content = dependencies_module.read_text(encoding="utf-8")
-
-    assert "def get_registry" in content
-    assert "def get_data_loader" in content
+def test_backend_main_fastapi_entrypoint_removed() -> None:
+    legacy_main = REPO_ROOT / "backend/app/main.py"
+    assert not legacy_main.exists()

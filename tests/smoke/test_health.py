@@ -1,10 +1,15 @@
-from fastapi.testclient import TestClient
+import os
 
-from backend.app.main import app
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "backend.config.settings")
+
+import django
+from django.test import Client
+
+django.setup()
 
 
 def test_health_ok() -> None:
-    client = TestClient(app)
+    client = Client()
     response = client.get("/health")
 
     assert response.status_code == 200

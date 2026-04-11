@@ -4,7 +4,7 @@ Aplikacja webowa do analizy danych z teleskopów czerenkowskich (projekt 6-osobo
 
 ## Co zawiera ten commit (zakres osoby #1)
 - Szkielet monorepo (`backend`, `frontend`, `analysis_core`, `tests`)
-- Kontrakty API (FastAPI) dla:
+- Kontrakty API (Django) dla:
   - theta²
   - sky map
   - spectrum
@@ -25,7 +25,8 @@ Aplikacja webowa do analizy danych z teleskopów czerenkowskich (projekt 6-osobo
 python -m venv .venv
 source .venv/bin/activate
 pip install -e .[dev]
-uvicorn backend.app.main:app --reload
+python manage.py migrate
+python manage.py runserver 0.0.0.0:8000
 ```
 
 W osobnym terminalu:
