@@ -1,0 +1,13 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+COPY pyproject.toml README.md manage.py ./
+COPY backend ./backend
+COPY analysis_core ./analysis_core
+COPY data ./data
+
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir .
+
+CMD ["gunicorn", "backend.config.wsgi:application", "--bind", "0.0.0.0:8000"]

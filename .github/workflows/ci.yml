@@ -1,0 +1,32 @@
+name: ci
+
+on:
+  push:
+    branches: ["main", "work"]
+  pull_request:
+
+jobs:
+  lint-and-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .[dev]
+      - name: Lint
+        run: ruff check .
+      - name: Smoke
+        run: pytest tests/smoke -q
+
+  docker-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Build backend image
+        run: docker build -f docker/Dockerfile.backend -t telescope-api:ci .
+      - name: Build frontend image
+        run: docker build -f docker/Dockerfile.frontend -t telescope-ui:ci .
