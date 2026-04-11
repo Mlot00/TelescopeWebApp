@@ -10,12 +10,28 @@ from .domain.dataset_registry import DatasetRegistry
 from .domain.provenance import build_provenance
 
 
+class InvalidRequestBodyError(Exception):
+    """Raised when request body cannot be decoded/parsing as JSON."""
+
+
 def _registry() -> DatasetRegistry:
     return DatasetRegistry(settings.TWAPP_DATASETS_FILE)
 
 
 def _loader() -> DataLoader:
     return DataLoader(data_root=settings.TWAPP_DATA_DIR, registry=_registry())
+
+
+def _validate_dataset(dataset_id: str) -> JsonResponse | None:
+    try:
+        ok, message = _loader().validate_dataset(dataset_id)
+    except KeyError as exc:
+        return JsonResponse({"detail": str(exc)}, status=404)
+
+    if not ok:
+        return JsonResponse({"detail": message}, status=400)
+
+    return None
 
 
 @require_GET
@@ -46,15 +62,25 @@ def observations(_: HttpRequest, dataset_id: str) -> JsonResponse:
 def _decode_body(request: HttpRequest) -> dict:
     if not request.body:
         return {}
-    return json.loads(request.body.decode("utf-8"))
+    try:
+        decoded_body = request.body.decode("utf-8")
+        return json.loads(decoded_body)
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise InvalidRequestBodyError("Malformed JSON body") from exc
 
 
 @require_POST
 def theta2(request: HttpRequest) -> JsonResponse:
-    payload = _decode_body(request)
+    try:
+        payload = _decode_body(request)
+    except InvalidRequestBodyError as exc:
+        return HttpResponseBadRequest(str(exc))
     dataset_id = payload.get("dataset_id")
     if not dataset_id:
         return HttpResponseBadRequest("dataset_id is required")
+    validation_error = _validate_dataset(dataset_id)
+    if validation_error:
+        return validation_error
     return JsonResponse(
         {
             "dataset_id": dataset_id,
@@ -66,10 +92,16 @@ def theta2(request: HttpRequest) -> JsonResponse:
 
 @require_POST
 def skymap(request: HttpRequest) -> JsonResponse:
-    payload = _decode_body(request)
+    try:
+        payload = _decode_body(request)
+    except InvalidRequestBodyError as exc:
+        return HttpResponseBadRequest(str(exc))
     dataset_id = payload.get("dataset_id")
     if not dataset_id:
         return HttpResponseBadRequest("dataset_id is required")
+    validation_error = _validate_dataset(dataset_id)
+    if validation_error:
+        return validation_error
     return JsonResponse(
         {
             "dataset_id": dataset_id,
@@ -81,10 +113,16 @@ def skymap(request: HttpRequest) -> JsonResponse:
 
 @require_POST
 def spectrum(request: HttpRequest) -> JsonResponse:
-    payload = _decode_body(request)
+    try:
+        payload = _decode_body(request)
+    except InvalidRequestBodyError as exc:
+        return HttpResponseBadRequest(str(exc))
     dataset_id = payload.get("dataset_id")
     if not dataset_id:
         return HttpResponseBadRequest("dataset_id is required")
+    validation_error = _validate_dataset(dataset_id)
+    if validation_error:
+        return validation_error
     return JsonResponse(
         {
             "dataset_id": dataset_id,
@@ -96,10 +134,16 @@ def spectrum(request: HttpRequest) -> JsonResponse:
 
 @require_POST
 def lightcurve(request: HttpRequest) -> JsonResponse:
-    payload = _decode_body(request)
+    try:
+        payload = _decode_body(request)
+    except InvalidRequestBodyError as exc:
+        return HttpResponseBadRequest(str(exc))
     dataset_id = payload.get("dataset_id")
     if not dataset_id:
         return HttpResponseBadRequest("dataset_id is required")
+    validation_error = _validate_dataset(dataset_id)
+    if validation_error:
+        return validation_error
     return JsonResponse(
         {
             "dataset_id": dataset_id,
