@@ -13,7 +13,7 @@ def _get_bool_env(name: str, default: bool = False) -> bool:
 
 
 def _get_allowed_hosts() -> list[str]:
-    raw_hosts = os.getenv("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1,[::1]")
+    raw_hosts = os.getenv("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1,[::1],testserver")
     hosts = [host.strip() for host in raw_hosts.split(",") if host.strip()]
     return hosts or ["localhost"]
 
