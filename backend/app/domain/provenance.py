@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 
 
 @dataclass
@@ -19,5 +19,5 @@ def build_provenance(
         dataset_id=dataset_id,
         analysis_kind=analysis_kind,
         git_sha=git_sha,
-        created_at=datetime.now(UTC).isoformat(),
+        created_at=datetime.now(timezone.utc).isoformat(),  # noqa: UP017
     )
