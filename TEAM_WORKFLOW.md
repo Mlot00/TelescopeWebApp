@@ -113,10 +113,13 @@ Ustalić **kto robi co**, **gdzie trafia kod**, **jakie są wspólne kontrakty**
 ## 2) Co jest wspólne dla wszystkich
 
 ### Wspólne kontrakty i struktury
-- API contracts: `backend/app/api/routes/*.py`
+- **Aktywne kontrakty HTTP (produkcyjne):** `backend/app/views.py` + `backend/app/urls.py`
+- **Legacy/stub kontrakty FastAPI (niewpięte do runtime):** `backend/app/api/routes/*.py`
 - Schemy wejścia/wyjścia: `backend/app/domain/schemas.py`
 - Dane i dataset registry: `data/datasets.yml`, `backend/app/domain/dataset_registry.py`
 - Loader i walidacja danych: `backend/app/domain/data_loader.py`
+
+> Uwaga integracyjna: aplikacja uruchamiana w tym repo wystawia endpointy przez Django (`backend/config/urls.py` → `backend/app/urls.py`). Zmiany wykonane wyłącznie w `backend/app/api/routes/*.py` nie będą serwowane bez dodatkowego podpięcia tych routerów do runtime.
 
 ### Wspólne zasady techniczne
 - Brak hardcoded pathów do danych produkcyjnych.
