@@ -30,3 +30,7 @@ Monorepo z trzema warstwami:
 
 ## Integracja zespołu
 Każdy członek rozwija własny moduł w `analysis_core/*` i dedykowaną stronę w `frontend/pages/*`.
+
+
+## Szczegółowy workflow zespołu
+Operacyjny podział zadań osób #2–#6 i checklisty PR: `TEAM_WORKFLOW.md`.
