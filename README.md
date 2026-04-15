@@ -50,3 +50,6 @@ docker compose up --build
 - Osoba 4: spectrum module + UI
 - Osoba 5: light curve module + UI
 - Osoba 6: testy E2E i wieloużytkownikowe
+
+## Dokument operacyjny zespołu
+- Szczegółowy podział prac osób #2–#6 oraz wspólne zasady: `TEAM_WORKFLOW.md`
