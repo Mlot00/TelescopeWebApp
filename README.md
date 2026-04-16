@@ -39,6 +39,11 @@ streamlit run frontend/Home.py
 cp .env.example .env
 docker compose up --build
 ```
+lub windows (uruchomiony docker desktop):
+```bash
+copy .env.example .env
+docker compose up --build
+```
 
 - API: http://localhost:8000
 - UI: http://localhost:8501
