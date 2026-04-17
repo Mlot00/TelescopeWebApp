@@ -9,6 +9,8 @@ from .domain.data_loader import DataLoader
 from .domain.dataset_registry import DatasetRegistry
 from .domain.provenance import build_provenance
 
+from analysis_core.skymap.service import run_skymap
+
 
 class InvalidRequestBodyError(Exception):
     """Raised when request body cannot be decoded/parsing as JSON."""
@@ -91,24 +93,34 @@ def theta2(request: HttpRequest) -> JsonResponse:
 
 
 @require_POST
-def skymap(request: HttpRequest) -> JsonResponse:
+def skymap(request):
     try:
-        payload = _decode_body(request)
-    except InvalidRequestBodyError as exc:
-        return HttpResponseBadRequest(str(exc))
-    dataset_id = payload.get("dataset_id")
-    if not dataset_id:
-        return HttpResponseBadRequest("dataset_id is required")
-    validation_error = _validate_dataset(dataset_id)
-    if validation_error:
-        return validation_error
-    return JsonResponse(
-        {
+        body = json.loads(request.body)
+
+        dataset_id = body["dataset_id"]
+        width = body.get("width_deg", 2.0)
+        binsz = body.get("binsz_deg", 0.02)
+
+        registry = DatasetRegistry()
+        dataset = registry.get(dataset_id)
+
+        loader = DataLoader()
+        datastore_path = loader.get_datastore_path(dataset)
+
+        result = run_skymap(
+            datastore_path=datastore_path,
+            width_deg=width,
+            binsz_deg=binsz,
+        )
+
+        return JsonResponse({
             "dataset_id": dataset_id,
-            "message": "Sky map endpoint stub ready for analysis_core.skymap integration",
-            "provenance": asdict(build_provenance(dataset_id, "skymap")),
-        }
-    )
+            "message": "Sky map generated",
+            "data": result
+        })
+
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
 
 
 @require_POST
