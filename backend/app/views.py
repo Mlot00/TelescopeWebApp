@@ -70,6 +70,8 @@ def _decode_body(request: HttpRequest) -> dict:
     except (UnicodeDecodeError, json.JSONDecodeError) as exc:
         raise InvalidRequestBodyError("Malformed JSON body") from exc
 
+def _bad_request(message: str) -> JsonResponse:
+    return JsonResponse({"detail": message}, status=400)
 
 @require_POST
 def theta2(request: HttpRequest) -> JsonResponse:
@@ -93,35 +95,53 @@ def theta2(request: HttpRequest) -> JsonResponse:
 
 
 @require_POST
-def skymap(request):
+def skymap(request: HttpRequest) -> JsonResponse:
     try:
-        body = json.loads(request.body)
+        payload = _decode_body(request)
+    except InvalidRequestBodyError as exc:
+        return _bad_request(str(exc))
 
-        dataset_id = body["dataset_id"]
-        width = body.get("width_deg", 2.0)
-        binsz = body.get("binsz_deg", 0.02)
+    dataset_id = payload.get("dataset_id") or None
+    if not dataset_id:
+        return _bad_request("dataset_id is required")
 
-        registry = DatasetRegistry()
-        dataset = registry.get(dataset_id)
+    validation_error = _validate_dataset(dataset_id)
+    if validation_error:
+        return validation_error
 
-        loader = DataLoader()
-        datastore_path = loader.get_datastore_path(dataset)
+    try:
+        dataset = _registry().get_dataset(dataset_id)
+        datastore_path = str(settings.TWAPP_DATA_DIR / dataset.datastore_path)
+    except (KeyError, AttributeError) as exc:
+        return JsonResponse({"detail": str(exc)}, status=404)
 
-        result = run_skymap(
-            datastore_path=datastore_path,
-            width_deg=width,
-            binsz_deg=binsz,
-        )
+    _SKYMAP_PARAMS = (
+        "width_deg",
+        "binsz_deg",
+        "energy_min_tev",
+        "energy_max_tev",
+        "ring_r_in_deg",
+        "ring_width_deg",
+        "exclusion_radius_deg",
+        "correlation_radius_deg",
+        "offset_max_deg",
+    )
+    kwargs = {key: payload[key] for key in _SKYMAP_PARAMS if key in payload}
 
-        return JsonResponse({
+    try:
+        result = run_skymap(datastore_path=datastore_path, dataset_id=dataset_id, **kwargs)
+    except Exception as exc:
+        import traceback
+        return JsonResponse({"detail": str(exc), "traceback": traceback.format_exc()}, status=500)
+
+    return JsonResponse(
+        {
             "dataset_id": dataset_id,
             "message": "Sky map generated",
-            "data": result
-        })
-
-    except Exception as e:
-        return JsonResponse({"error": str(e)}, status=500)
-
+            "data": result,
+            "provenance": asdict(build_provenance(dataset_id, "skymap")),
+        }
+    )
 
 @require_POST
 def spectrum(request: HttpRequest) -> JsonResponse:
