@@ -1,8 +1,3 @@
-"""Make hess-dl3-dr1 dataset for Gammapy.
-
-You have to download the data and background models
-and set the `PATH` variables at the top, then run `make.py`
-"""
 import logging
 import shutil
 from pathlib import Path
