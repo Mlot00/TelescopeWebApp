@@ -13,7 +13,7 @@ log = logging.getLogger(__name__)
 
 PATH_DATA = Path("/Users/deil/work/data/hess/hess-dl3-dr1")
 PATH_BKG = Path("/Users/deil/work/code/hess_ost_paper_material/background_model")
-PATH_OUT = Path(".")
+PATH_OUT = Path("")
 
 DEBUG_RUN = False
 
