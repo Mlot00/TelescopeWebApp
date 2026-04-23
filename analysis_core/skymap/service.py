@@ -6,9 +6,7 @@ from astropy.coordinates import SkyCoord
 from regions import CircleSkyRegion
 
 from gammapy.data import DataStore
-
 from gammapy.datasets import MapDataset
-
 from gammapy.estimators import ExcessMapEstimator
 from gammapy.makers import MapDatasetMaker, RingBackgroundMaker, SafeMaskMaker
 from gammapy.maps import MapAxis, WcsGeom
@@ -46,14 +44,14 @@ def run_skymap(
     correlation_radius_deg: float = 0.1,
     offset_max_deg: float = 2.5,
 ) -> dict:
+
     log.info(
-        "run_skymap: dataset=%s  width=%.2f  binsz=%.3f  ring_r_in=%.2f  ring_width=%.2f",
-        dataset_id, width_deg, binsz_deg, ring_r_in_deg, ring_width_deg,
+        "run_skymap: dataset=%s  width=%.2f  binsz=%.3f",
+        dataset_id, width_deg, binsz_deg,
     )
 
     datastore = DataStore.from_dir(datastore_path)
     observations = datastore.get_observations()
-    log.info("Loaded %d observations", len(observations))
 
     ra, dec = _get_source_coord(dataset_id)
     source_pos = SkyCoord(ra, dec, unit="deg", frame="icrs")
@@ -63,6 +61,7 @@ def run_skymap(
         f"{energy_max_tev} TeV",
         nbin=1,
     )
+
     energy_axis_true = MapAxis.from_energy_bounds(
         f"{energy_min_tev * 0.5} TeV",
         f"{energy_max_tev * 2.0} TeV",
@@ -94,10 +93,12 @@ def run_skymap(
     maker = MapDatasetMaker(
         selection=["counts", "exposure", "background", "psf", "edisp"]
     )
+
     safe_mask_maker = SafeMaskMaker(
         methods=["offset-max"],
         offset_max=offset_max_deg * u.deg,
     )
+
     ring_maker = RingBackgroundMaker(
         r_in=f"{ring_r_in_deg} deg",
         width=f"{ring_width_deg} deg",
@@ -107,13 +108,12 @@ def run_skymap(
     stacked_onoff = None
 
     for obs in observations:
-        log.debug("Processing observation %s", obs.obs_id)
-
         cutout = dataset_empty.cutout(
             position=source_pos,
             width=(width_deg + 1.0) * u.deg,
             name=f"obs-{obs.obs_id}",
         )
+
         cutout = maker.run(cutout, obs)
         cutout = safe_mask_maker.run(cutout, obs)
         cutout_image = cutout.to_image()
@@ -125,13 +125,14 @@ def run_skymap(
             stacked_onoff.stack(onoff)
 
     if stacked_onoff is None:
-        raise RuntimeError("No observations were processed — check datastore path.")
+        raise RuntimeError("No observations processed")
 
     estimator = ExcessMapEstimator(
         correlation_radius=correlation_radius_deg * u.deg,
         selection_optional=[],
         correlate_off=False,
     )
+
     result_maps = estimator.run(stacked_onoff)
 
     def _to_list(m) -> list:
@@ -140,9 +141,9 @@ def run_skymap(
             arr = arr[0]
         return np.nan_to_num(arr, nan=0.0).tolist()
 
-    counts_arr       = _to_list(stacked_onoff.counts)
-    bkg_arr          = _to_list(stacked_onoff.counts_off)
-    excess_arr       = _to_list(result_maps["excess"])
+    counts_arr = _to_list(stacked_onoff.counts)
+    bkg_arr = _to_list(stacked_onoff.counts_off)
+    excess_arr = _to_list(result_maps["npred_excess"])
     significance_arr = _to_list(result_maps["sqrt_ts"])
 
     sig_flat = np.array(significance_arr).ravel()
@@ -150,35 +151,16 @@ def run_skymap(
     stats = {
         "n_counts":          int(np.nansum(counts_arr)),
         "n_background":      float(round(np.nansum(bkg_arr), 1)),
-        "n_excess":          float(round(float(np.nansum(excess_arr)), 1)),
-        "significance_max":  float(round(float(np.nanmax(sig_flat)), 2)),
-        "significance_mean": float(round(float(np.nanmean(sig_flat)), 2)),
+        "n_excess":          float(round(np.nansum(excess_arr), 1)),
+        "significance_max":  float(round(np.nanmax(sig_flat), 2)),
+        "significance_mean": float(round(np.nanmean(sig_flat), 2)),
         "n_observations":    len(observations),
     }
-
-    wcs_header = dict(geom.to_image().wcs.to_header())
-
-    log.info(
-        "Sky map done: N_counts=%d  N_excess=%.0f  sig_max=%.1f",
-        stats["n_counts"], stats["n_excess"], stats["significance_max"],
-    )
 
     return {
         "counts":       counts_arr,
         "background":   bkg_arr,
         "excess":       excess_arr,
         "significance": significance_arr,
-        "wcs_header":   wcs_header,
         "stats":        stats,
-        "params": {
-            "dataset_id":             dataset_id,
-            "width_deg":              width_deg,
-            "binsz_deg":              binsz_deg,
-            "energy_min_tev":         energy_min_tev,
-            "energy_max_tev":         energy_max_tev,
-            "ring_r_in_deg":          ring_r_in_deg,
-            "ring_width_deg":         ring_width_deg,
-            "exclusion_radius_deg":   exclusion_radius_deg,
-            "correlation_radius_deg": correlation_radius_deg,
-        },
     }
