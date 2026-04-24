@@ -5,3 +5,9 @@ datasets:
     source: Crab Nebula
     datastore_path: sample/crab_dl3
     dl3_index_required: true
+  - id: hess-dl3-dr1
+    title: HESS DL3 DR1
+    instrument: HESS
+    source: multiple
+    datastore_path: sample/hess-dl3-dr1
+    dl3_index_required: true
