@@ -5,10 +5,9 @@ datasets:
     source: Crab Nebula
     datastore_path: sample/crab_dl3
     dl3_index_required: true
-
-  - id: hess_msh1552
-    title: H.E.S.S. MSH 15-52
-    instrument: H.E.S.S.
-    source: MSH 15-52
+  - id: hess-dl3-dr1
+    title: HESS DL3 DR1
+    instrument: HESS
+    source: multiple
     datastore_path: sample/hess-dl3-dr1
     dl3_index_required: true
