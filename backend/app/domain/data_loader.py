@@ -34,11 +34,9 @@ class DataLoader:
 
         events = []
 
-        # HESS files are *.fits.gz (not *events*)
         for file in dataset_path.rglob("*.fits.gz"):
             with fits.open(file) as hdul:
 
-                # skip files without EVENTS HDU
                 if "EVENTS" not in hdul:
                     continue
 
@@ -49,10 +47,7 @@ class DataLoader:
 
                 for row in table:
                     energy = row["ENERGY"]
-
-                    # convert to TeV
                     energy = (energy * u.Unit(energy_unit)).to(u.TeV).value
-
                     events.append(
                         {
                             "energy": float(energy),
