@@ -114,20 +114,38 @@ col_left, col_right = st.columns(2)
 with col_left:
     st.markdown("#### Geometria mapy")
     # Wartość domyślna 3.0
-    width_deg = slider_input("Szerokość mapy [°]", "width_deg", 0.5, 5.0, 3.0, 0.5, "%.1f")
-    binsz_deg = slider_input("Rozmiar piksela [°]", "binsz_deg", 0.01, 0.5, 0.02, 0.01, "%.2f")
+    width_deg = slider_input(
+        "Szerokość mapy [°]", "width_deg", 0.5, 5.0, 3.0, 0.5, "%.1f"
+    )
+    binsz_deg = slider_input(
+        "Rozmiar piksela [°]", "binsz_deg", 0.01, 0.5, 0.02, 0.01, "%.2f"
+    )
 
     st.markdown("#### Energia")
-    e_min = slider_input("Energia min [TeV]", "e_min", 0.1, 10.0, 0.5, 0.1, "%.1f")
-    e_max = slider_input("Energia max [TeV]", "e_max", 1.0, 50.0, 10.0, 1.0, "%.1f")
+    e_min = slider_input(
+        "Energia min [TeV]", "e_min", 0.1, 10.0, 0.5, 0.1, "%.1f"
+    )
+    e_max = slider_input(
+        "Energia max [TeV]", "e_max", 1.0, 50.0, 10.0, 1.0, "%.1f"
+    )
 
 with col_right:
     st.markdown("#### Tło pierścieniowe")
-    ring_r_in = slider_input("Promień wewnętrzny [°]", "ring_r_in", 0.1, 2.0, 0.5, 0.05, "%.2f")
-    ring_width = slider_input("Szerokość pierścienia [°]", "ring_width", 0.1, 1.0, 0.3, 0.05, "%.2f")
-    exclusion_radius = slider_input("Wykluczenie źródła [°]", "exclusion_radius", 0.1, 1.0, 0.3, 0.05, "%.2f")
-    correlation_radius = slider_input("Korelacja [°]", "correlation_radius", 0.01, 0.5, 0.1, 0.01, "%.2f")
-    offset_max = slider_input("Max offset [°]", "offset_max", 0.5, 5.0, 2.5, 0.5, "%.1f")
+    ring_r_in = slider_input(
+        "Promień wewnętrzny [°]", "ring_r_in", 0.1, 2.0, 0.5, 0.05, "%.2f"
+    )
+    ring_width = slider_input(
+        "Szerokość pierścienia [°]", "ring_width", 0.1, 1.0, 0.3, 0.05, "%.2f"
+    )
+    exclusion_radius = slider_input(
+        "Wykluczenie źródła [°]", "exclusion_radius", 0.1, 1.0, 0.3, 0.05, "%.2f"
+    )
+    correlation_radius = slider_input(
+        "Korelacja [°]", "correlation_radius", 0.01, 0.5, 0.1, 0.01, "%.2f"
+    )
+    offset_max = slider_input(
+        "Max offset [°]", "offset_max", 0.5, 5.0, 2.5, 0.5, "%.1f"
+    )
 
 st.divider()
 
