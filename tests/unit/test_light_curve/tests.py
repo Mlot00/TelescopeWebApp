@@ -1,135 +1,135 @@
+from pathlib import Path
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-from analysis_core.lightcurve.service import LightCurveService
+from analysis_core.lightcurve.service import run_lightcurve
+from backend.app.domain.data_loader import DataLoader
+from backend.app.domain.schemas import LightCurveRequest
+from backend.app.domain.dataset_registry import DatasetRegistry
 
 
-# =========================
-# MOCK / HELPERY
-# =========================
-
-def _make_service():
-    service = LightCurveService()
-    service.dl3_path = "dummy_path"
-    service.energy_min = 0.1
-    service.energy_max = 10.0
-    service.time_bin_minutes = 60
-    return service
+def _get_data_root():
+    root = Path(__file__).resolve()
+    while not (root / "data").exists():
+        root = root.parent
+    return root
 
 
-def _mock_events_dataframe():
-    # 10 godzin danych, 1 zdarzenie na godzinę
-    times = pd.date_range("2024-01-01", periods=10, freq="h")
-    energies = np.linspace(0.5, 5.0, 10)
-
-    return pd.DataFrame({
-        "time": times,
-        "energy": energies
-    })
+def _get_loader(root):
+    registry = DatasetRegistry(root / "data/datasets.yml")
+    return DataLoader(
+        data_root=root / "data",
+        registry=registry
+    )
 
 
-# podmieniamy _load_events żeby nie używać Gammapy
-def _patch_load_events(service, df):
-    service._load_events = lambda: df
+def test_lightcurve_basic():
+    root = _get_data_root()
+    data_loader = _get_loader(root)
+
+    request = LightCurveRequest(
+        dataset_id="hess-dl3-dr1",
+        e_min_tev=0.1,
+        e_max_tev=10,
+        time_bin="30min"
+    )
+
+    response = run_lightcurve(request, data_loader)
+
+    assert response.message == "Light curve generated successfully"
+    assert len(response.data["time"]) > 0
+    assert len(response.data["counts"]) == len(response.data["time"])
+    assert len(response.data["flux"]) == len(response.data["time"])
 
 
-# =========================
-# TEST 1: BASIC BINNING
-# =========================
+def test_lightcurve_energy_filter_empty():
+    root = _get_data_root()
+    data_loader = _get_loader(root)
 
-def test_basic_binning():
-    print("Running test_basic_binning...")
-
-    service = _make_service()
-    df = _mock_events_dataframe()
-    _patch_load_events(service, df)
-
-    filtered = service._filter_energy(df)
-    result = service._bin_time(filtered)
-
-    assert not result.empty
-    assert "counts" in result.columns
-    assert "flux" in result.columns
-
-    print("✔ test_basic_binning passed")
-
-
-# =========================
-# TEST 2: ENERGY FILTER
-# =========================
-
-def test_instrument_filter():
-    print("Running test_instrument_filter...")
-
-    service = _make_service()
-    df = _mock_events_dataframe()
-    _patch_load_events(service, df)
-
-    # ustaw wąski zakres energii
-    service.energy_min = 1.0
-    service.energy_max = 2.0
-
-    filtered = service._filter_energy(df)
-
-    assert filtered["energy"].min() >= 1.0
-    assert filtered["energy"].max() <= 2.0
-
-    print("✔ test_instrument_filter passed")
-
-
-# =========================
-# TEST 3: EMPTY RESULT
-# =========================
-
-def test_empty_result():
-    print("Running test_empty_result...")
-
-    service = _make_service()
-    df = pd.DataFrame({
-        "time": pd.date_range("2024-01-01", periods=5, freq="h"),
-        "energy": np.ones(5) * 0.01  # poza zakresem
-    })
-
-    _patch_load_events(service, df)
+    request = LightCurveRequest(
+        dataset_id="hess-dl3-dr1",
+        e_min_tev=1000,
+        e_max_tev=2000,
+        time_bin="10min"
+    )
 
     try:
-        service._filter_energy(df)
-        raise AssertionError("Should have failed")
+        run_lightcurve(request, data_loader)
+        assert False, "Expected ValueError for empty energy range"
     except ValueError as e:
         assert "No events in selected energy range" in str(e)
 
-    print("✔ test_empty_result passed")
+
+def test_lightcurve_time_bin_parsing():
+    root = _get_data_root()
+    data_loader = _get_loader(root)
+
+    request = LightCurveRequest(
+        dataset_id="hess-dl3-dr1",
+        e_min_tev=0.1,
+        e_max_tev=10,
+        time_bin="1h"
+    )
+
+    response = run_lightcurve(request, data_loader)
+
+    assert len(response.data["time"]) > 0
 
 
-# =========================
-# TEST 4: REALISTIC PIPELINE (NO GAMMAPY)
-# =========================
+def test_lightcurve_plot_real_data():
+    root = _get_data_root()
+    data_loader = _get_loader(root)
 
-def test_real_dataset_spectrum_plot():
-    print("Running test_real_dataset_spectrum_plot...")
+    request = LightCurveRequest(
+        dataset_id="hess-dl3-dr1",
+        e_min_tev=0.05,
+        e_max_tev=0.50,
+        time_bin="720min"
+    )
 
-    service = _make_service()
-    df = _mock_events_dataframe()
-    _patch_load_events(service, df)
+    response = run_lightcurve(request, data_loader)
 
-    # pełny pipeline
-    filtered = service._filter_energy(df)
-    result = service.run = lambda: service._bin_time(filtered)
+    time = response.data["time"]
 
-    output = result()
+    assert len(time) > 0
 
-    assert len(output) > 0
-    assert output["counts"].sum() > 0
+    df = pd.DataFrame({
+        "time": pd.to_datetime(response.data["time"]),
+        "flux": response.data["flux"],
+        "counts": response.data["counts"]
+    })
 
-    print("✔ test_real_dataset_spectrum_plot passed")
+    df = df.sort_values("time")
 
+    #opcjonalnie: zakres lat (2004–2005)
+    df = df[(df["time"] >= "2004-01-01") & (df["time"] <= "2005-01-01")]
 
-# =========================
-# MAIN
-# =========================
+    #  usuwanie zer
+    df_plot = df[df["flux"] > 0]
+
+    # --- wykres
+    plt.figure(figsize=(12, 6))
+
+    plt.step(df_plot["time"], df_plot["flux"], where="mid", label="Flux")
+
+    plt.xlabel("Time")
+    plt.ylabel("Flux")
+    plt.title("Light Curve")
+
+    ymax = np.percentile(df_plot["flux"], 95)
+    plt.ylim(0, ymax * 1.2)
+
+    plt.grid(True, linestyle="--", alpha=0.5)
+    plt.legend()
+
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+    plt.show()
+
 
 if __name__ == "__main__":
-    test_basic_binning()
-    test_instrument_filter()
-    test_empty_result()
-    test_real_dataset_spectrum_plot()
+    test_lightcurve_basic()
+    test_lightcurve_energy_filter_empty()
+    test_lightcurve_time_bin_parsing()
+    test_lightcurve_plot_real_data()
