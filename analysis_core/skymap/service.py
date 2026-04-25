@@ -15,7 +15,7 @@ log = logging.getLogger(__name__)
 
 _SOURCE_COORDS: dict[str, tuple[float, float]] = {
     "crab_sample":   (83.633, 22.014),
-    "hess_msh1552":  (228.32, -59.08),
+    "hess-dl3-dr1":  (228.32, -59.08),
     "hess_rx_j1713": (258.35, -39.76),
     "magic_crab":    (83.633, 22.014),
 }

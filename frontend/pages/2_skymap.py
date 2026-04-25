@@ -18,7 +18,7 @@ API_BASE_URL = API_BASE_URL or os.getenv(
 )
 
 DATASETS = {
-    "hess-dl3-dr1 — MSH 15-52 (H.E.S.S.)": "hess_msh1552",
+    "hess-dl3-dr1 — MSH 15-52 (H.E.S.S.)": "hess-dl3-dr1",
     "crab_sample — Mgławica Kraba (LST-1)": "crab_sample",
 }
 
@@ -113,6 +113,7 @@ col_left, col_right = st.columns(2)
 
 with col_left:
     st.markdown("#### Geometria mapy")
+    # Wartość domyślna 3.0
     width_deg = slider_input("Szerokość mapy [°]", "width_deg", 0.5, 5.0, 3.0, 0.5, "%.1f")
     binsz_deg = slider_input("Rozmiar piksela [°]", "binsz_deg", 0.01, 0.5, 0.02, 0.01, "%.2f")
 
@@ -130,15 +131,24 @@ with col_right:
 
 st.divider()
 
+energy_error = e_min >= e_max
 col_btn, col_status = st.columns([1, 3])
 
 with col_btn:
-    run_btn = st.button("Uruchom analizę", type="primary", use_container_width=True)
+    run_btn = st.button(
+        "Uruchom analizę",
+        type="primary",
+        use_container_width=True,
+        disabled=energy_error,
+    )
 
 with col_status:
-    status_placeholder = st.empty()
+    if energy_error:
+        st.error("Energia min musi być mniejsza niż energia max.")
+    else:
+        status_placeholder = st.empty()
 
-if run_btn:
+if not energy_error and run_btn:
     payload = {
         "dataset_id": dataset_id,
         "width_deg": width_deg,

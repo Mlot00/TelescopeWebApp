@@ -38,9 +38,15 @@ class Theta2Response(BaseModel):
 
 class SkyMapRequest(BaseModel):
     dataset_id: str
-    width_deg: float = Field(default=2.0, gt=0)
+    width_deg: float = Field(default=3.0, gt=0)
     binsz_deg: float = Field(default=0.02, gt=0)
-
+    energy_min_tev: float = Field(default=0.5, gt=0)
+    energy_max_tev: float = Field(default=10.0, gt=0)
+    ring_r_in_deg: float = Field(default=0.5, gt=0)
+    ring_width_deg: float = Field(default=0.3, gt=0)
+    exclusion_radius_deg: float = Field(default=0.3, gt=0)
+    correlation_radius_deg: float = Field(default=0.1, gt=0)
+    offset_max_deg: float = Field(default=2.5, gt=0)
 
 class SkyMapResponse(BaseModel):
     dataset_id: str
