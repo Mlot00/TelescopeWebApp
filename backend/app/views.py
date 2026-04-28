@@ -109,6 +109,13 @@ def skymap(request: HttpRequest) -> JsonResponse:
     if validation_error:
         return validation_error
 
+    e_min = payload.get("energy_min_tev", 0.5)
+    e_max = payload.get("energy_max_tev", 10.0)
+    if e_min >= e_max:
+        return _bad_request(
+            f"energy_min_tev ({e_min}) must be less than energy_max_tev ({e_max})"
+        )
+
     try:
         dataset = _registry().get_dataset(dataset_id)
         datastore_path = str(settings.TWAPP_DATA_DIR / dataset.datastore_path)
@@ -116,15 +123,15 @@ def skymap(request: HttpRequest) -> JsonResponse:
         return JsonResponse({"detail": str(exc)}, status=404)
 
     _SKYMAP_PARAMS = (
-        "width_deg",
-        "binsz_deg",
-        "energy_min_tev",
-        "energy_max_tev",
-        "ring_r_in_deg",
-        "ring_width_deg",
-        "exclusion_radius_deg",
-        "correlation_radius_deg",
-        "offset_max_deg",
+    "width_deg",
+    "binsz_deg",
+    "energy_min_tev",
+    "energy_max_tev",
+    "ring_r_in_deg",
+    "ring_width_deg",
+    "exclusion_radius_deg",
+    "correlation_radius_deg",
+    "offset_max_deg",
     )
     kwargs = {key: payload[key] for key in _SKYMAP_PARAMS if key in payload}
 
@@ -132,7 +139,7 @@ def skymap(request: HttpRequest) -> JsonResponse:
         result = run_skymap(datastore_path=datastore_path, dataset_id=dataset_id, **kwargs)
     except Exception as exc:
         import traceback
-        return JsonResponse({"detail": str(exc), "traceback": traceback.format_exc()}, status=500)
+        return JsonResponse({"detail": str(exc), "traceback": traceback.format_exc()},status=500)
 
     return JsonResponse(
         {
